@@ -1,0 +1,23 @@
+:- [cd, aufg2_test].
+
+% 1 - Es werden alle Stücke mit ihrer Tonart ausgegeben -LARISSA PYCHLAU
+collect_stueck(Collection) :- findall((TITEL, TONART), (stueck(SNR, _KNR, TITEL, TONART, _OPUS), SNR\==null, TITEL\==null, TONART\==null), Ausgabe1), list_to_set(Ausgabe1, Collection).
+
+% 2 - Es werden alle Stücke mit einer Spielzeit zwischen 88 und 342 ausgegeben -LARISSA PYCHLAU
+collect_gs(Collection) :- findall((CDNR, GESAMTSPIELZEIT), (cd(CDNR, _NAME, _HERSTELLER, _ANZ_CDS, GESAMTSPIELZEIT), CDNR\==null, GESAMTSPIELZEIT\==null, GESAMTSPIELZEIT>=88, GESAMTSPIELZEIT=<342), Ausgabe2), list_to_set(Ausgabe2, Collection).
+
+% 3 - Es werden alle Stücke mit Komponist bestimmter Komponisten ausgegeben -LARISSA PYCHLAU
+collect_st([Kuenstler|KListe], Collection) :- findall((Kuenstler, TITEL), (komponist(KNR, _VORNAME, Kuenstler, _GEBOREN, _GESTORBEN), KNR\==null, stueck(_SNR, KNR, TITEL, _TONART, _OPUS)), Ausgabe3), collect_st(KListe, Ausgabe3_folgend), append(Ausgabe3, Ausgabe3_folgend, Ausgabe_fuer_3_unfertig), list_to_set(Ausgabe_fuer_3_unfertig, Collection).
+collect_st([],[]).
+
+% 4 - Gesucht sind Name und Vorname aller Komponisten, die für ein bestimmtes Instrument komponiert haben -ANTON BOSENICK
+collect_komp(INSTRUMENT,Collection) :- findall((VORNAME, NAME), (solist(_CDNR, SNR, _NAME, INSTRUMENT), SNR\==null, stueck(SNR, KNR, _TITEL, _TONART, _OPUS), KNR\==null, komponist(KNR, VORNAME, NAME, _GEBOREN, _GESTORBEN), VORNAME\==null, NAME\==null), Ausgabe4), list_to_set(Ausgabe4, Collection).
+
+% 5 - Gesucht ist die Gesamtspieltzeit aufaddiert für individuell jeden Komponisten -ANTON BOSENICK
+collect_time(Collection) :- findall((VORNAME, NAME, GESAMTSPIELZEIT, CDNR), (komponist(KNR, VORNAME, NAME, _GEBOREN, _GESTORBEN), KNR\==null, stueck(SNR, KNR, _TITEL, _TONART, _OPUS), SNR\==null, aufnahme(CDNR, SNR, _ORCHESTER, _LEITUNG), CDNR\==null, cd(CDNR, _NAME, _HERSTELLER, _ANZ_CDS, GESAMTSPIELZEIT), GESAMTSPIELZEIT\==null), Ausgabe5), list_to_set(Ausgabe5, Aufgabe5_Zwischenergebnis), aufsummierer(Aufgabe5_Zwischenergebnis, [], Collection).
+aufsummierer([(VORNAME, NAME, GESAMTSPIELZEIT, _)|Listenrest], Akkumulator, Ausgabe5_final) :- \+ member((VORNAME, NAME, _GESAMTSPIELZEIT), Akkumulator), !, append(Akkumulator, [(VORNAME, NAME, GESAMTSPIELZEIT)], Befuellte_Liste), aufsummierer(Listenrest, Befuellte_Liste, Ausgabe5_final).
+aufsummierer([(VORNAME, NAME, GESAMTSPIELZEIT, _)|Listenrest], Akkumulator, Ausgabe5_final) :- member((VORNAME, NAME, Alter_Wert), Akkumulator), entferner(Akkumulator, (VORNAME, NAME, Alter_Wert), Akkumulator_erneuert), Neuer_Zeitwert is Alter_Wert+GESAMTSPIELZEIT, append(Akkumulator_erneuert,[(VORNAME, NAME, Neuer_Zeitwert)], Befuellt), aufsummierer(Listenrest, Befuellt, Ausgabe5_final).
+aufsummierer([], Akkumulator, Akkumulator).
+entferner([], _, []).
+entferner([H|T], H, T).
+entferner([H|T], X, [H|Ausgabe]) :- entferner(T, X, Ausgabe).
